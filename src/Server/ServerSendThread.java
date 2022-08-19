@@ -9,9 +9,10 @@ public class ServerSendThread extends Thread{
     private BufferedReader toClientText;
     private DatagramSocket ServerSocket;
     private DatagramPacket sendPacket;
-    private byte[] sendData = new byte[1024];
     private InetAddress ip;
     private int port;
+    private boolean ClientSocketState = true;
+    private boolean stop = false;
 
     public ServerSendThread(DatagramSocket socket, InetAddress ip_, int port_) throws Exception{
         ServerSocket = socket;
@@ -21,14 +22,16 @@ public class ServerSendThread extends Thread{
 
     public void run(){
         try{
-            while(true){
+            while(ClientSocketState){
                 toClientText = new BufferedReader(new InputStreamReader(System.in));
                 String text = toClientText.readLine();
+                byte[] sendData = new byte[1024];
                 sendData = text.getBytes();
                 sendPacket = new DatagramPacket(sendData, sendData.length, ip, port);
                 ServerSocket.send(sendPacket);
 
                 if(text.equals("@quit")){
+                    stop = true;
                     ServerSocket.close();
                     break;
                 }
@@ -38,6 +41,8 @@ public class ServerSendThread extends Thread{
             e.printStackTrace();
         }
     }
-
+    public void setClientSocketState(boolean state){
+        ClientSocketState = state;
+    }
 
 }

@@ -20,11 +20,15 @@ public class ClientSendThread extends Thread{
 
     public void run(){
         try {
-
+            String text = "@NewClient";
+            byte [] sendData = new byte [1024];
+            sendData = text.getBytes();
+            sendPacket = new DatagramPacket(sendData, sendData.length, ip, port);
+            ClientSocket.send(sendPacket);
             while (true) {
                 toServerText = new BufferedReader(new InputStreamReader(System.in));
-                String text = toServerText.readLine();
-                byte[] sendData = text.getBytes();
+                text = toServerText.readLine();
+                sendData = text.getBytes();
                 sendPacket = new DatagramPacket(sendData, sendData.length, ip, port);
                 ClientSocket.send(sendPacket);
 

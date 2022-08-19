@@ -9,8 +9,8 @@ public class ServerReceiveThread extends Thread {
     private int port;
     private String text;
     private String inputName = "Uncknown" ;
-    private int isReceived = 0;
     private ServerSendThread thread2;
+    private boolean stop = false;
 
     public ServerReceiveThread(DatagramSocket server) throws Exception{
         ServerSocket = server;
@@ -18,28 +18,31 @@ public class ServerReceiveThread extends Thread {
 
     public void run()  {
         try {
+            byte[] receiveData = new byte[1024];
+            receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            ServerSocket.receive(receivePacket);
+            thread2 = new ServerSendThread(ServerSocket, getIp(), getPort());
+            thread2.setClientSocketState(true);
+            thread2.start();
+
             while (true) {
 
-                    byte[] receiveData = new byte[1024];
+                    receiveData = new byte[1024];
                     receivePacket = new DatagramPacket(receiveData, receiveData.length);
                     ServerSocket.receive(receivePacket);
-                    isReceived = 1;
                     text = new String(receivePacket.getData()).trim();
-
-                    if (isReceived == 1) {
-                        thread2 = new ServerSendThread(ServerSocket, getIp(), getPort());
-                        thread2.start();
-                        isReceived ++;
-                    }
-
 
                     if (text.startsWith("@name")) {
                         inputName = text.substring(6);
                         continue;
                     }
 
-                    if (text.equals("@quit"))
+                    if (text.equals("@quit")) {
+                        thread2.setClientSocketState(false);
                         System.out.println("User has left");
+                        break;
+
+                    }
 
                     else
                         System.out.println(inputName + ": " + text);
@@ -49,7 +52,6 @@ public class ServerReceiveThread extends Thread {
         }
         catch (Exception e){
             ServerSocket.close();
-
             }
     }
 
@@ -61,11 +63,4 @@ public class ServerReceiveThread extends Thread {
         return receivePacket.getPort();
     }
 
-    public int getReceivedState(){
-        return isReceived;
-    }
-
-    public Thread getThread(){
-        return thread2;
-    }
 }
